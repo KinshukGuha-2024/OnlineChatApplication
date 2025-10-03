@@ -1,4 +1,4 @@
-<table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" style="padding-top:40px;background:#f5fdf0">
+<table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" style="padding-top:40px;background:#FDA172">
     <tbody>
         <tr>
             <td align="center">
@@ -16,7 +16,7 @@
                                     Thank you for registering with us. To complete your sign-up and verify your email address, please use the following one-time password (OTP):
                                 </p>
                                 <p style="margin:20px 0;text-align:center;">
-                                    <span style="display:inline-block;padding:15px 30px;background:#5a9a2e;color:#ffffff;font-size:24px;font-weight:bold;letter-spacing:3px;border-radius:6px;">
+                                    <span style="display:inline-block;padding:15px 30px;background:#D16002;color:#ffffff;font-size:24px;font-weight:bold;letter-spacing:3px;border-radius:6px;">
                                         {{ $otp }}
                                     </span>
                                 </p>
@@ -33,7 +33,7 @@
                             </tr>
                         @endif
                         <tr>
-                            <td style="color:#f3fafb;font-family:Verdana, Geneva, Tahoma, sans-serif;font-size:12px;font-weight:400;text-align:center;padding:15px;" bgcolor="#5a9a2e">
+                            <td style="color:#f3fafb;font-family:Verdana, Geneva, Tahoma, sans-serif;font-size:12px;font-weight:400;text-align:center;padding:15px;" bgcolor="#D16002">
                                 <b>Note:</b> Please do not reply to this email as this is an auto-generated response.
                             </td>
                         </tr>

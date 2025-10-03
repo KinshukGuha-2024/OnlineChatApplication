@@ -47,22 +47,42 @@
         <div class="line"></div>
 
         <div class="media-options">
-            <a href="#" class="field facebook">
+            <a href="#" class="field facebook" id="facebookSignup">
                 <i class='bx bxl-facebook facebook-icon'></i>
-                <span>Login with Facebook</span>
+                <span>Signup with Facebook</span>
             </a>
         </div>
 
         <div class="media-options">
-            <a href="#" class="field google">
+            <a href="#" class="field google" id="googleSignup">
                 <img src="{{ url('images/google.png') }}" alt="" class="google-img">
-                <span>Login with Google</span>
+                <span>Signup with Google</span>
             </a>
         </div>
 
     </div>
 @endsection
-<script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider  } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyABU02id_bDNa0tKkr2ociBA0mERh0Hz14",
+        authDomain: "test-project-37959.firebaseapp.com",
+        projectId: "test-project-37959",
+        storageBucket: "test-project-37959.firebasestorage.app",
+        messagingSenderId: "327215588065",
+        appId: "1:327215588065:web:67e8d71199ae37629c4da0",
+        measurementId: "G-FV1LCZM9P7"
+    }; 
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    const fbProvider = new FacebookAuthProvider();
+
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.querySelector('#registerForm');
 
@@ -123,5 +143,77 @@
                 }
             });
         }
+        const facebookSignup = document.getElementById("facebookSignup");
+        const googleSignup = document.getElementById("googleSignup");
+        facebookSignup.addEventListener('click', handleFacebookSignup);
+        googleSignup.addEventListener('click', handleGoogleSignup);
+
+            
+
+        async function handleFacebookSignup(event) {
+            event.preventDefault();
+            try {
+                const result = await signInWithPopup(auth, fbProvider);
+                const user = result.user;
+
+                const formData = new FormData();
+                formData.append('_token', get_token());
+                formData.append('facebook_json', JSON.stringify(user));
+                formData.append('is_facebook_registration', '1');
+
+                $.ajax({
+                    url: "{{ route('auth.register') }}", 
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        console.log(response);
+                        // window.location.href = response.redirect_url;
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Facebook signup error:', error);
+                    }
+                });
+
+            } catch (error) {
+                console.error('Firebase Facebook popup error:', error);
+            }
+        }
+
+           
+
+        async function handleGoogleSignup(event) {
+            event.preventDefault();
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                const formData = new FormData();
+                formData.append('_token', get_token());
+                formData.append('google_json', JSON.stringify(user));
+                formData.append('is_google_registration', '1');
+                $.ajax({
+                    url: "{{ route('auth.register') }}",
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        window.location.href = response.redirect_url;
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Google signup error:', error);
+                    }
+                });
+
+            } catch (error) {
+                console.error('Firebase popup error:', error);
+            }
+        }
+
+        
     });
+
+
+
 </script>

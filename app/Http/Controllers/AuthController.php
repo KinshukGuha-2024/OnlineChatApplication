@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileHelper;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\OtpRequest;
 use App\Http\Requests\RegisterRequest;
@@ -11,9 +12,12 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+
+use function App\Helpers\prx;
 
 class AuthController extends Controller
 {
@@ -32,30 +36,82 @@ class AuthController extends Controller
     }
 
     public function register(RegisterRequest $request) {
-        $otp = strtoupper(Str::random(6));
-        session(['password' => $request->password]);
-        $user = new TempUser();
-        $user->first_name = $request->first_name;
-        $user->last_name = $request->last_name;
-        $user->email = $request->email;
-        $user->password = Hash::make($request->password);
-        $user->otp = $otp;
-        $user->otp_valid_till = Carbon::now()->addMinutes(10);
-        $user->save();
-        $mail_data = [
-            "name" => $request->first_name .' '. $request->last_name,
-            "otp"  => $otp
-        ];
-        Mail::to($request->email)->send(new RegistrationOtpSend($mail_data));
-        return response()->json([
-            'message' => 'success',
-            'data' => ["email" => $request->email],
-            'redirect_url' => route('auth.verify-otp-page')
-        ]);
+        if($request->is_google_registration == 1) {
+            $google_json = json_decode($request->google_json);
+            $user = User::where('email', $google_json->providerData[0]->email)->first();
+            if($user){
+                Auth::login($user);
+                session()->flash('success-message', 'Logged in successfully.');
+                return response()->json([
+                    'message' => 'success',
+                    'redirect_url' => route('home.index')
+                ]);
+            } else {
+                $parts = explode(' ', $google_json->providerData[0]->displayName, 2);
+                $first_name = $parts[0];
+                $last_name = $parts[1] ?? '';
+                $user = new User();
+                $user->first_name = $first_name;
+                $user->last_name = $last_name;
+                $user->email = $google_json->providerData[0]->email;
+    
+                $url = $google_json->providerData[0]->photoURL;
+                $contents = file_get_contents($url);
+                $fileName = 'google_avatar_' . time() . '.jpg';
+                $file_path = 'uploads/users/' . $fileName;
+                $fullPath = public_path($file_path);
+                $directory = dirname($fullPath);
+                if (!File::exists($directory)) {
+                    File::makeDirectory($directory, 0777, true);
+                }
+                file_put_contents(public_path($file_path), $contents);
+                $user->profile_image = $file_path;
+    
+                $user->otp_verified_at = Carbon::now();
+                $user->is_google_login = 'Yes';
+                $user->raw_response = $request->google_json;
+                $user->save();
+                Auth::login($user);
+                session()->flash('success-message', 'Your account has been created successfully.');
+                return response()->json([
+                    'message' => 'success',
+                    'redirect_url' => route('home.index')
+                ]);
+            }
+        } elseif($request->is_facebook_registration == 1) {
+            $facebook_json = json_decode($request->facebook_json);
+            prx($facebook_json);
+
+        } else{
+            $otp = strtoupper(Str::random(6));
+            session(['password' => $request->password]);
+            $user = new TempUser();
+            $user->first_name = $request->first_name;
+            $user->last_name = $request->last_name;
+            $user->email = $request->email;
+            $user->password = Hash::make($request->password);
+            $user->otp = $otp;
+            $user->otp_valid_till = Carbon::now()->addMinutes(10);
+            $user->save();
+            $mail_data = [
+                "name" => $request->first_name .' '. $request->last_name,
+                "otp"  => $otp
+            ];
+            Mail::to($request->email)->send(new RegistrationOtpSend($mail_data));
+            return response()->json([
+                'message' => 'success',
+                'data' => ["email" => $request->email],
+                'redirect_url' => route('auth.verify-otp-page')
+            ]);
+        }
     }
 
     public function verifyOtpPage(Request $request) {
         $email = $request->email;
+        $is_user = User::where('email', $email)->first();
+        if(!empty($is_user)) {
+            return redirect()->route('home.index');
+        }
         return view('auth.otp-page', compact('email'));
     }
 
@@ -112,6 +168,7 @@ class AuthController extends Controller
         $user = TempUser::where('email', $request->email)->orderByDesc('id')->first();
         $user->otp = $otp;
         $user->otp_valid_till = Carbon::now()->addMinutes(10);
+        $user->save();
 
         $mail_data = [
             "name" => $user->first_name .' '. $user->last_name,

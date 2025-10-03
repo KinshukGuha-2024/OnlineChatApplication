@@ -74,7 +74,7 @@
             </div>
             <div class="card p-2 text-center">
                 <h6>Please enter the one time password <br> to verify your account</h6>
-                <div> <span>A code has been sent to</span> <small id="maskedNumber">kinshuk@yopmail.com</small> </div>
+                <div> <span>A code has been sent to</span> <small id="maskedNumber">{{ $email }}</small> </div>
                 <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2">
                     <input class="m-2 text-center form-control rounded" type="text" id="first" maxlength="1" />
                     <input class="m-2 text-center form-control rounded" type="text" id="second" maxlength="1" />
@@ -104,22 +104,23 @@
 @push('js')
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-
-            let timeLeft = 60;
-            const secondEl = document.getElementById('secondVal');
-            console.log(secondEl);
-            const countdown = setInterval(() => {
-                timeLeft--;
-                secondEl.textContent = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(countdown);
-                    secondEl.textContent = "0";
-                    const resendCodeDiv = document.getElementById('resendCodeDiv');
-                    const secondDiv = document.getElementById('secondDiv');
-                    resendCodeDiv.style.display = "";
-                    secondDiv.style.display = "none"; 
-                }
-            }, 1000);
+            otpTimer();
+            function otpTimer() {
+                let timeLeft = 60;
+                const secondEl = document.getElementById('secondVal');
+                const countdown = setInterval(() => {
+                    timeLeft--;
+                    secondEl.textContent = timeLeft;
+                    if (timeLeft <= 0) {
+                        clearInterval(countdown);
+                        secondEl.textContent = "60";
+                        const resendCodeDiv = document.getElementById('resendCodeDiv');
+                        const secondDiv = document.getElementById('secondDiv');
+                        resendCodeDiv.style.display = "";
+                        secondDiv.style.display = "none"; 
+                    }
+                }, 1000);
+            }
 
             function OTPInput() {
                 const inputs = document.querySelectorAll('#otp > input');
@@ -184,6 +185,11 @@
 
             const resendCode = document.getElementById('resendCode');
             resendCode.addEventListener('click', function() {
+                const resendCodeDiv = document.getElementById('resendCodeDiv');
+                const secondDiv = document.getElementById('secondDiv');
+                resendCodeDiv.style.display = "none";
+                secondDiv.style.display = ""; 
+                otpTimer();
                 let formData = new FormData();
                 formData.append('_token', get_token());
                 formData.append('email', "{{ $email }}");

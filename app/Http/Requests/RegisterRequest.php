@@ -25,11 +25,11 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "first_name" => "required",
-            "last_name"  => 'required',
-            "email"      => ['required','email:strict','unique:users,email'],
-            "password"   => "required|min:7|max:16|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{7,16}$/",
-            'confirm_password' => 'required|same:password',
+            'first_name' => 'required_unless:is_google_registration,1',
+            "last_name"  => 'required_unless:is_google_registration,1',
+            "email"      => ['required_unless:is_google_registration,1','email:strict','unique:users,email'],
+            "password"   => "required_unless:is_google_registration,1|min:7|max:16|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{7,16}$/",
+            'confirm_password' => 'required_unless:is_google_registration,1|same:password',
         ];
     }
 

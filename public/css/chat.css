@@ -1,0 +1,39 @@
+/* Custom styles for the 'Frosted Glass' effect */
+.frosted-panel {
+    background-color: rgba(30, 41, 59, 0.85); /* Slate 800 with 85% opacity */
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(100, 116, 139, 0.3); /* Slate 500 border */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Style for the active/focused chat */
+.chat-active {
+    background-color: rgba(67, 56, 202, 0.8); /* Violet 700 semi-transparent */
+    border-left: 4px solid #8B5CF6; /* Violet 500 accent */
+}
+
+/* Scrollbar styling for modern browsers */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #475569; /* Slate 600 */
+    border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #1E293B; /* Slate 800 */
+}
+
+/* Call Overlay Animation */
+.call-overlay-enter {
+    animation: fadeIn 0.3s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+body {
+    /* Set the font globally, though it's also in the HTML head */
+    font-family: 'Inter', sans-serif;
+}

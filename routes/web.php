@@ -15,7 +15,7 @@ Route::controller(AuthController::class)->prefix('/auth')->as('auth.')->group(fu
     Route::post('/register', 'register')->name('register');
     Route::post('/verification-process', 'verifyOtp')->name('verify-otp');
     Route::post('/verify-otp', 'verifyOtpPage')->name('verify-otp-page');
-    Route::get('/resend-otp', 'resendOtp')->name('resend-otp');
+    Route::post('/resend-otp', 'resendOtp')->name('resend-otp');
 
     // Login Routes
     Route::get('/signin', 'signin')->name('signin');

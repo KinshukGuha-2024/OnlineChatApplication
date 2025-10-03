@@ -25,6 +25,13 @@ class User extends Authenticatable
         'status',
         'otp',
         'otp_verified_at',
+        'is_google_login',
+        'is_facebook_login',
+        'facebook_id',
+        'google_id',
+        'access_token',
+        'profile_image',
+        'raw_response'
     ];
 
     /**
