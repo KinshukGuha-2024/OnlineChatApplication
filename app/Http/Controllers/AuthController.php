@@ -27,7 +27,30 @@ class AuthController extends Controller
     } 
 
     public function login(LoginRequest $request) {
-        
+        if($request->is_google_registration == 1) {
+            $google_json = json_decode($request->google_json);
+            $user = User::where('email', $google_json->providerData[0]->email)->first();
+            if($user){
+                Auth::login($user);
+                session()->flash('success-message', 'Logged in successfully.');
+                return response()->json([
+                    'message' => 'success',
+                    'redirect_url' => route('home.index')
+                ]);
+            } else {
+                return response()->json(['message' => 'No account was found with this email address please signup to proceed.', 'errors' => ['general' => ['No account was found with this email address please signup to proceed.']]], 422);
+            }
+        } else {
+            if(Auth::attempt(['email'=> $request->email, 'password' => $request->password])) {
+                session()->flash('success-message', 'Logged in successfully.');
+                return response()->json([
+                    'message' => 'success',
+                    'redirect_url' => route('home.index')
+                ]);
+            } else {
+                return response()->json(['message' => 'Invalid email and/or password', 'errors' => ['general' => ['Invalid email and/or password']]], 422);
+            }
+        }
     }
 
     public function signup() {

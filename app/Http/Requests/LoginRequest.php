@@ -26,9 +26,16 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email'        => 'required|email:strict',
-            'password' => ['required', 'string', Password::min(6)],
+            'email'        => 'required_unless:is_google_registration,1|email:strict',
+            'password' => ['required_unless:is_google_registration,1', 'string', Password::min(6)],
             'device_token' => 'nullable',
+        ];
+    }
+
+    public function messages() {
+        return [
+            'email'                     => "Please provide your email address",
+            'password'                  => "Please provide your 6 digit valid password",
         ];
     }
 
