@@ -1,387 +1,425 @@
 (() => {
     'use strict';
-
     const staticData = {};
-
-    Object.assign(staticData, {
-        currentUser: {
-            id: 'u1',
-            name: 'Elena Howard',
-            avatar: 'https://ssl.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png',
-            status: 'Available - Product Manager',
-            presence: 'online',
-            role: 'Product Manager',
-            devices: { microphone: true, camera: true },
-            callPreferences: { defaultMicOn: true, defaultVideoOn: true }
-        },
-        contacts: [
-            {
-                id: 'u2',
-                name: 'Noah Patterson',
-                avatar: 'https://ssl.gstatic.com/images/branding/product/1x/avatar_circle_green_512dp.png',
+    function init_response() {
+        Object.assign(staticData, {
+            currentUser: {
+                id: 'u1',
+                name: 'Elena Howard',
+                avatar: 'https://ssl.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png',
+                status: 'Available - Product Manager',
                 presence: 'online',
-                role: 'Lead Designer',
-                statusMessage: 'Design sprint in progress',
-                devices: { microphone: true, camera: false },
-                callPreferences: { defaultMicOn: true, defaultVideoOn: false }
-            },
-            {
-                id: 'u3',
-                name: 'Sofia Bennett',
-                avatar: 'https://ssl.gstatic.com/images/branding/product/1x/avatar_circle_yellow_512dp.png',
-                presence: 'away',
-                role: 'QA Lead',
-                statusMessage: 'Reviewing regression suite',
+                role: 'Product Manager',
                 devices: { microphone: true, camera: true },
                 callPreferences: { defaultMicOn: true, defaultVideoOn: true }
             },
-            {
-                id: 'u4',
-                name: 'Owen Walker',
-                avatar: 'https://ssl.gstatic.com/images/branding/product/1x/avatar_circle_red_512dp.png',
-                presence: 'online',
-                role: 'Engineering Manager',
-                statusMessage: 'Shipping build #1208',
-                devices: { microphone: false, camera: false },
-                callPreferences: { defaultMicOn: false, defaultVideoOn: false }
-            },
-            {
-                id: 'u5',
-                name: 'Chloe Smith',
-                avatar: 'https://ssl.gstatic.com/images/branding/product/1x/avatar_circle_purple_512dp.png',
-                presence: 'offline',
-                role: 'Lifecycle Marketing',
-                statusMessage: 'In campaign review',
-                devices: { microphone: true, camera: true },
-                callPreferences: { defaultMicOn: true, defaultVideoOn: false }
-            },
-            {
-                id: 'u6',
-                name: 'Ethan Price',
-                avatar: 'https://ssl.gstatic.com/images/branding/product/1x/avatar_circle_light_blue_512dp.png',
-                presence: 'online',
-                role: 'Support Lead',
-                statusMessage: 'Resolving priority tickets',
-                devices: { microphone: true, camera: true },
-                callPreferences: { defaultMicOn: true, defaultVideoOn: true }
-            }
-        ]
-    });
-
-    Object.assign(staticData, {
-        directChats: [
-            {
-                id: 'c1',
-                participantId: 'u2',
-                topic: 'Brand refresh',
-                unreadCount: 0,
-                pinned: true,
-                messages: [
-                    {
-                        id: 'c1-m1',
-                        senderId: 'u2',
-                        timestamp: '2024-05-23T08:12:00Z',
-                        text: 'Morning! Here is the updated brand kit and reference moodboard: https://figma.com/file/BRK112. Let me know if we can align today.',
-                        attachments: [
-                            {
-                                id: 'c1-doc1',
-                                type: 'document',
-                                name: 'Brand-Guidelines-v3.pdf',
-                                size: '5.4 MB',
-                                url: 'https://example.com/files/Brand-Guidelines-v3.pdf'
-                            },
-                            {
-                                id: 'c1-link1',
-                                type: 'link',
-                                url: 'https://dribbble.com/shots/18783242-Messaging-Dashboard',
-                                title: 'Dribbble - Messaging Dashboard',
-                                description: 'Layout references that match the updated tone.'
-                            }
-                        ],
-                        status: 'seen'
-                    },
-                    {
-                        id: 'c1-m2',
-                        senderId: 'u1',
-                        timestamp: '2024-05-23T08:24:00Z',
-                        text: 'These hero shots feel closer to the direction. Thoughts?',
-                        attachments: [
-                            {
-                                id: 'c1-img1',
-                                type: 'image',
-                                url: 'https://www.gstatic.com/webp/gallery/1.jpg',
-                                groupId: 'c1-hero',
-                                alt: 'Campaign concept moodboard 1'
-                            },
-                            {
-                                id: 'c1-img2',
-                                type: 'image',
-                                url: 'https://www.gstatic.com/webp/gallery/2.jpg',
-                                groupId: 'c1-hero',
-                                alt: 'Campaign concept moodboard 2'
-                            },
-                            {
-                                id: 'c1-img3',
-                                type: 'image',
-                                url: 'https://www.gstatic.com/webp/gallery/3.jpg',
-                                groupId: 'c1-hero',
-                                alt: 'Campaign concept moodboard 3'
-                            }
-                        ],
-                        status: 'seen'
-                    },
-                    {
-                        id: 'c1-m3',
-                        senderId: 'u2',
-                        timestamp: '2024-05-23T08:38:00Z',
-                        text: 'Love the second option. I will annotate a few details and we can finalize before lunch.',
-                        status: 'delivered'
-                    }
-                ]
-            },
-            {
-                id: 'c2',
-                participantId: 'u3',
-                topic: 'Release QA',
-                unreadCount: 2,
-                pinned: false,
-                messages: [
-                    {
-                        id: 'c2-m1',
-                        senderId: 'u3',
-                        timestamp: '2024-05-22T17:05:00Z',
-                        text: 'Regression on build #1208 is complete. The summary is here.',
-                        attachments: [
-                            {
-                                id: 'c2-link1',
-                                type: 'link',
-                                url: 'https://linear.app/atlas/product/issue/APP-254',
-                                title: 'Linear - APP-254',
-                                description: 'Release candidate QA notes and blockers.'
-                            }
-                        ],
-                        status: 'seen'
-                    },
-                    {
-                        id: 'c2-m2',
-                        senderId: 'u1',
-                        timestamp: '2024-05-22T17:18:00Z',
-                        text: 'Thanks! Scheduling a dry run for tomorrow at 09:30.',
-                        status: 'seen'
-                    },
-                    {
-                        id: 'c2-m3',
-                        senderId: 'u3',
-                        timestamp: '2024-05-23T06:44:00Z',
-                        text: 'Heads up: payment service test is flaky again, logging details in the deck.',
-                        attachments: [
-                            {
-                                id: 'c2-doc1',
-                                type: 'document',
-                                name: 'Checkout-Diagnostics.xlsx',
-                                size: '842 KB',
-                                url: 'https://example.com/files/Checkout-Diagnostics.xlsx'
-                            }
-                        ],
-                        status: 'delivered'
-                    }
-                ]
-            },
-            {
-                id: 'c3',
-                participantId: 'u5',
-                topic: 'Lifecycle campaigns',
-                unreadCount: 0,
-                pinned: false,
-                messages: [
-                    {
-                        id: 'c3-m1',
-                        senderId: 'u5',
-                        timestamp: '2024-05-21T14:12:00Z',
-                        text: 'Sharing the creative copy we reviewed with the agency.',
-                        attachments: [
-                            {
-                                id: 'c3-doc1',
-                                type: 'document',
-                                name: 'Lifecycle-Copy-Q3.docx',
-                                size: '268 KB',
-                                url: 'https://example.com/files/Lifecycle-Copy-Q3.docx'
-                            }
-                        ],
-                        status: 'seen'
-                    },
-                    {
-                        id: 'c3-m2',
-                        senderId: 'u1',
-                        timestamp: '2024-05-21T14:18:00Z',
-                        text: 'Looks good. Let us also bundle the onboarding drip updates.',
-                        status: 'seen'
-                    }
-                ]
-            }
-        ],
-        groupChats: [
-            {
-                id: 'g1',
-                name: 'Product Team',
-                avatar: 'https://ssl.gstatic.com/images/branding/product/1x/meet_2020q4_64dp.png',
-                description: 'Daily syncs and launch notes',
-                members: ['u1', 'u2', 'u3', 'u4', 'u6'],
-                unreadCount: 3,
-                pinned: true,
-                messages: [
-                    {
-                        id: 'g1-m1',
-                        senderId: 'u4',
-                        timestamp: '2024-05-23T07:05:00Z',
-                        text: 'Morning team! Agenda today: 1) onboarding release, 2) experiment rollout, 3) launch blockers.',
-                        status: 'seen'
-                    },
-                    {
-                        id: 'g1-m2',
-                        senderId: 'u3',
-                        timestamp: '2024-05-23T07:08:00Z',
-                        text: 'Latest QA notes are documented here for quick reference.',
-                        attachments: [
-                            {
-                                id: 'g1-link1',
-                                type: 'link',
-                                url: 'https://notion.so/product-team/launch-readiness',
-                                title: 'Launch Readiness Checklist',
-                                description: 'Live tracker for experiment rollout and QA sign-off.'
-                            }
-                        ],
-                        status: 'seen'
-                    },
-                    {
-                        id: 'g1-m3',
-                        senderId: 'u1',
-                        timestamp: '2024-05-23T07:12:00Z',
-                        text: 'Documenting the funnel experiment in this deck. Please leave comments before noon.',
-                        attachments: [
-                            {
-                                id: 'g1-doc1',
-                                type: 'document',
-                                name: 'Activation-Funnel-v2.pptx',
-                                size: '4.1 MB',
-                                url: 'https://example.com/files/Activation-Funnel-v2.pptx'
-                            }
-                        ],
-                        status: 'sent'
-                    },
-                    {
-                        id: 'g1-m4',
-                        senderId: 'u2',
-                        timestamp: '2024-05-23T07:18:00Z',
-                        text: 'We captured a quick clip of the latest prototype for async review.',
-                        attachments: [
-                            {
-                                id: 'g1-img1',
-                                type: 'image',
-                                url: 'https://www.gstatic.com/webp/gallery/4.jpg',
-                                groupId: 'g1-prototype',
-                                alt: 'Prototype frame 1'
-                            },
-                            {
-                                id: 'g1-img2',
-                                type: 'image',
-                                url: 'https://www.gstatic.com/webp/gallery/5.jpg',
-                                groupId: 'g1-prototype',
-                                alt: 'Prototype frame 2'
-                            }
-                        ],
-                        status: 'sent'
-                    }
-                ]
-            },
-            {
-                id: 'g2',
-                name: 'Growth Guild',
-                avatar: 'https://ssl.gstatic.com/images/branding/product/1x/chat_2020q4_64dp.png',
-                description: 'Lifecycle, paid marketing, retention',
-                members: ['u1', 'u5', 'u6'],
-                unreadCount: 0,
-                pinned: false,
-                messages: [
-                    {
-                        id: 'g2-m1',
-                        senderId: 'u5',
-                        timestamp: '2024-05-22T15:25:00Z',
-                        text: 'Reminder: tomorrow we present the retention loops deck to leadership.',
-                        status: 'seen'
-                    },
-                    {
-                        id: 'g2-m2',
-                        senderId: 'u6',
-                        timestamp: '2024-05-22T15:42:00Z',
-                        text: 'Customer success highlights are consolidated here: https://miro.com/app/board/hub-journey',
-                        status: 'seen'
-                    },
-                    {
-                        id: 'g2-m3',
-                        senderId: 'u1',
-                        timestamp: '2024-05-22T16:03:00Z',
-                        text: 'Perfect, I will update the activation experiment figures before EOD.',
-                        status: 'delivered'
-                    }
-                ]
-            }
-        ]
-    });
-
-    Object.assign(staticData, {
-        callLogs: [
-            {
-                id: 'call1',
-                type: 'video',
-                direction: 'outgoing',
-                status: 'completed',
-                timestamp: '2024-05-21T15:00:00Z',
-                duration: '16m 24s',
-                summary: 'Weekly design sync',
-                contextType: 'direct',
-                contextId: 'c1',
-                participants: [
-                    { userId: 'u1', micOn: true, videoOn: true },
-                    { userId: 'u2', micOn: true, videoOn: false }
-                ]
-            },
-            {
-                id: 'call2',
-                type: 'voice',
-                direction: 'incoming',
-                status: 'missed',
-                timestamp: '2024-05-22T09:12:00Z',
-                duration: '--',
-                summary: 'QA escalation',
-                contextType: 'direct',
-                contextId: 'c2',
-                participants: [
-                    { userId: 'u3', micOn: true, videoOn: false },
-                    { userId: 'u1', micOn: true, videoOn: false }
-                ]
-            },
-            {
-                id: 'call3',
-                type: 'video',
-                direction: 'outgoing',
-                status: 'completed',
-                timestamp: '2024-05-20T18:45:00Z',
-                duration: '28m 02s',
-                summary: 'Launch rehearsal',
-                contextType: 'group',
-                contextId: 'g1',
-                participants: [
-                    { userId: 'u1', micOn: true, videoOn: true },
-                    { userId: 'u2', micOn: true, videoOn: false },
-                    { userId: 'u3', micOn: true, videoOn: true },
-                    { userId: 'u4', micOn: false, videoOn: false }
-                ]
-            }
-        ],
-        emoji: ['😀','😁','😂','🤣','😃','😄','😊','😍','🤩','😘','😉','😇','🥳','🤗','🤔','🤨','😐','😶','🙄','😏','😴','🤤','😪','😷','🤒','🤕','🤠','🥸','😎','🤓','🥰','😬','😅','😓','😭','😡','😤','🤯','😱','😲','🤩','🥺','🙌','👏','👍','👎','🙏','🔥','🌟','⚡','🎯','✅','📎','📁','🗂️','📝','📞','💬']
-    });
-
+            contacts: [
+                {
+                    id: 'u2',
+                    name: 'Noah Patterson',
+                    avatar: 'https://ssl.gstatic.com/images/branding/product/1x/avatar_circle_green_512dp.png',
+                    presence: 'online',
+                    role: 'Lead Designer',
+                    statusMessage: 'Design sprint in progress',
+                    devices: { microphone: true, camera: false },
+                    callPreferences: { defaultMicOn: true, defaultVideoOn: false }
+                },
+                {
+                    id: 'u3',
+                    name: 'Sofia Bennett',
+                    avatar: 'https://ssl.gstatic.com/images/branding/product/1x/avatar_circle_yellow_512dp.png',
+                    presence: 'away',
+                    role: 'QA Lead',
+                    statusMessage: 'Reviewing regression suite',
+                    devices: { microphone: true, camera: true },
+                    callPreferences: { defaultMicOn: true, defaultVideoOn: true }
+                },
+                {
+                    id: 'u4',
+                    name: 'Owen Walker',
+                    avatar: 'https://ssl.gstatic.com/images/branding/product/1x/avatar_circle_red_512dp.png',
+                    presence: 'online',
+                    role: 'Engineering Manager',
+                    statusMessage: 'Shipping build #1208',
+                    devices: { microphone: false, camera: false },
+                    callPreferences: { defaultMicOn: false, defaultVideoOn: false }
+                },
+                {
+                    id: 'u5',
+                    name: 'Chloe Smith',
+                    avatar: 'https://ssl.gstatic.com/images/branding/product/1x/avatar_circle_purple_512dp.png',
+                    presence: 'offline',
+                    role: 'Lifecycle Marketing',
+                    statusMessage: 'In campaign review',
+                    devices: { microphone: true, camera: true },
+                    callPreferences: { defaultMicOn: true, defaultVideoOn: false }
+                },
+                {
+                    id: 'u6',
+                    name: 'Ethan Price',
+                    avatar: 'https://ssl.gstatic.com/images/branding/product/1x/avatar_circle_light_blue_512dp.png',
+                    presence: 'online',
+                    role: 'Support Lead',
+                    statusMessage: 'Resolving priority tickets',
+                    devices: { microphone: true, camera: true },
+                    callPreferences: { defaultMicOn: true, defaultVideoOn: true }
+                }
+            ]
+        });
+    
+        Object.assign(staticData, {
+            directChats: [
+                {
+                    id: 'c1',
+                    participantId: 'u2',
+                    topic: 'Brand refresh',
+                    unreadCount: 0,
+                    pinned: true,
+                    messages: [
+                        {
+                            id: 'c1-m1',
+                            senderId: 'u2',
+                            timestamp: '2024-05-23T08:12:00Z',
+                            text: 'Morning! Here is the updated brand kit and reference moodboard: https://figma.com/file/BRK112. Let me know if we can align today.',
+                            attachments: [
+                                {
+                                    id: 'c1-doc1',
+                                    type: 'document',
+                                    name: 'Brand-Guidelines-v3.pdf',
+                                    size: '5.4 MB',
+                                    url: 'https://example.com/files/Brand-Guidelines-v3.pdf'
+                                },
+                                {
+                                    id: 'c1-link1',
+                                    type: 'link',
+                                    url: 'https://dribbble.com/shots/18783242-Messaging-Dashboard',
+                                    title: 'Dribbble - Messaging Dashboard',
+                                    description: 'Layout references that match the updated tone.'
+                                }
+                            ],
+                            status: 'seen'
+                        },
+                        {
+                            id: 'c1-m2',
+                            senderId: 'u1',
+                            timestamp: '2024-05-23T08:24:00Z',
+                            text: 'These hero shots feel closer to the direction. Thoughts?',
+                            attachments: [
+                                {
+                                    id: 'c1-img1',
+                                    type: 'image',
+                                    url: 'https://www.gstatic.com/webp/gallery/1.jpg',
+                                    groupId: 'c1-hero',
+                                    alt: 'Campaign concept moodboard 1'
+                                },
+                                {
+                                    id: 'c1-img2',
+                                    type: 'image',
+                                    url: 'https://www.gstatic.com/webp/gallery/2.jpg',
+                                    groupId: 'c1-hero',
+                                    alt: 'Campaign concept moodboard 2'
+                                },
+                                {
+                                    id: 'c1-img3',
+                                    type: 'image',
+                                    url: 'https://www.gstatic.com/webp/gallery/3.jpg',
+                                    groupId: 'c1-hero',
+                                    alt: 'Campaign concept moodboard 3'
+                                }
+                            ],
+                            status: 'seen'
+                        },
+                        {
+                            id: 'c1-m3',
+                            senderId: 'u2',
+                            timestamp: '2024-05-23T08:38:00Z',
+                            text: 'Love the second option. I will annotate a few details and we can finalize before lunch.',
+                            status: 'delivered'
+                        }
+                    ]
+                },
+                {
+                    id: 'c2',
+                    participantId: 'u3',
+                    topic: 'Release QA',
+                    unreadCount: 2,
+                    pinned: false,
+                    messages: [
+                        {
+                            id: 'c2-m1',
+                            senderId: 'u3',
+                            timestamp: '2024-05-22T17:05:00Z',
+                            text: 'Regression on build #1208 is complete. The summary is here.',
+                            attachments: [
+                                {
+                                    id: 'c2-link1',
+                                    type: 'link',
+                                    url: 'https://linear.app/atlas/product/issue/APP-254',
+                                    title: 'Linear - APP-254',
+                                    description: 'Release candidate QA notes and blockers.'
+                                }
+                            ],
+                            status: 'seen'
+                        },
+                        {
+                            id: 'c2-m2',
+                            senderId: 'u1',
+                            timestamp: '2024-05-22T17:18:00Z',
+                            text: 'Thanks! Scheduling a dry run for tomorrow at 09:30.',
+                            status: 'seen'
+                        },
+                        {
+                            id: 'c2-m3',
+                            senderId: 'u3',
+                            timestamp: '2024-05-23T06:44:00Z',
+                            text: 'Heads up: payment service test is flaky again, logging details in the deck.',
+                            attachments: [
+                                {
+                                    id: 'c2-doc1',
+                                    type: 'document',
+                                    name: 'Checkout-Diagnostics.xlsx',
+                                    size: '842 KB',
+                                    url: 'https://example.com/files/Checkout-Diagnostics.xlsx'
+                                }
+                            ],
+                            status: 'delivered'
+                        }
+                    ]
+                },
+                {
+                    id: 'c3',
+                    participantId: 'u5',
+                    topic: 'Lifecycle campaigns',
+                    unreadCount: 0,
+                    pinned: false,
+                    messages: [
+                        {
+                            id: 'c3-m1',
+                            senderId: 'u5',
+                            timestamp: '2024-05-21T14:12:00Z',
+                            text: 'Sharing the creative copy we reviewed with the agency.',
+                            attachments: [
+                                {
+                                    id: 'c3-doc1',
+                                    type: 'document',
+                                    name: 'Lifecycle-Copy-Q3.docx',
+                                    size: '268 KB',
+                                    url: 'https://example.com/files/Lifecycle-Copy-Q3.docx'
+                                }
+                            ],
+                            status: 'seen'
+                        },
+                        {
+                            id: 'c3-m2',
+                            senderId: 'u1',
+                            timestamp: '2024-05-21T14:18:00Z',
+                            text: 'Looks good. Let us also bundle the onboarding drip updates.',
+                            status: 'seen'
+                        }
+                    ]
+                }
+            ],
+            groupChats: [
+                {
+                    id: 'g1',
+                    name: 'Product Team',
+                    avatar: 'https://ssl.gstatic.com/images/branding/product/1x/meet_2020q4_64dp.png',
+                    description: 'Daily syncs and launch notes',
+                    members: ['u1', 'u2', 'u3', 'u4', 'u6'],
+                    unreadCount: 3,
+                    pinned: true,
+                    messages: [
+                        {
+                            id: 'g1-m1',
+                            senderId: 'u4',
+                            timestamp: '2024-05-23T07:05:00Z',
+                            text: 'Morning team! Agenda today: 1) onboarding release, 2) experiment rollout, 3) launch blockers.',
+                            status: 'seen'
+                        },
+                        {
+                            id: 'g1-m2',
+                            senderId: 'u3',
+                            timestamp: '2024-05-23T07:08:00Z',
+                            text: 'Latest QA notes are documented here for quick reference.',
+                            attachments: [
+                                {
+                                    id: 'g1-link1',
+                                    type: 'link',
+                                    url: 'https://notion.so/product-team/launch-readiness',
+                                    title: 'Launch Readiness Checklist',
+                                    description: 'Live tracker for experiment rollout and QA sign-off.'
+                                }
+                            ],
+                            status: 'seen'
+                        },
+                        {
+                            id: 'g1-m3',
+                            senderId: 'u1',
+                            timestamp: '2024-05-23T07:12:00Z',
+                            text: 'Documenting the funnel experiment in this deck. Please leave comments before noon.',
+                            attachments: [
+                                {
+                                    id: 'g1-doc1',
+                                    type: 'document',
+                                    name: 'Activation-Funnel-v2.pptx',
+                                    size: '4.1 MB',
+                                    url: 'https://example.com/files/Activation-Funnel-v2.pptx'
+                                }
+                            ],
+                            status: 'sent'
+                        },
+                        {
+                            id: 'g1-m4',
+                            senderId: 'u2',
+                            timestamp: '2024-05-23T07:18:00Z',
+                            text: 'We captured a quick clip of the latest prototype for async review.',
+                            attachments: [
+                                {
+                                    id: 'g1-img1',
+                                    type: 'image',
+                                    url: 'https://www.gstatic.com/webp/gallery/4.jpg',
+                                    groupId: 'g1-prototype',
+                                    alt: 'Prototype frame 1'
+                                },
+                                {
+                                    id: 'g1-img2',
+                                    type: 'image',
+                                    url: 'https://www.gstatic.com/webp/gallery/5.jpg',
+                                    groupId: 'g1-prototype',
+                                    alt: 'Prototype frame 2'
+                                }
+                            ],
+                            status: 'sent'
+                        }
+                    ]
+                },
+                {
+                    id: 'g2',
+                    name: 'Growth Guild',
+                    avatar: 'https://ssl.gstatic.com/images/branding/product/1x/chat_2020q4_64dp.png',
+                    description: 'Lifecycle, paid marketing, retention',
+                    members: ['u1', 'u5', 'u6'],
+                    unreadCount: 0,
+                    pinned: false,
+                    messages: [
+                        {
+                            id: 'g2-m1',
+                            senderId: 'u5',
+                            timestamp: '2024-05-22T15:25:00Z',
+                            text: 'Reminder: tomorrow we present the retention loops deck to leadership.',
+                            status: 'seen'
+                        },
+                        {
+                            id: 'g2-m2',
+                            senderId: 'u6',
+                            timestamp: '2024-05-22T15:42:00Z',
+                            text: 'Customer success highlights are consolidated here: https://miro.com/app/board/hub-journey',
+                            status: 'seen'
+                        },
+                        {
+                            id: 'g2-m3',
+                            senderId: 'u1',
+                            timestamp: '2024-05-22T16:03:00Z',
+                            text: 'Perfect, I will update the activation experiment figures before EOD.',
+                            status: 'delivered'
+                        }
+                    ]
+                }
+            ]
+        });
+    
+        Object.assign(staticData, {
+            callLogs: [
+                {
+                    id: 'call1',
+                    type: 'video',
+                    direction: 'outgoing',
+                    status: 'completed',
+                    timestamp: '2024-05-21T15:00:00Z',
+                    duration: '16m 24s',
+                    summary: 'Weekly design sync',
+                    contextType: 'direct',
+                    contextId: 'c1',
+                    participants: [
+                        { userId: 'u1', micOn: true, videoOn: true },
+                        { userId: 'u2', micOn: true, videoOn: false }
+                    ]
+                },
+                {
+                    id: 'call2',
+                    type: 'voice',
+                    direction: 'incoming',
+                    status: 'missed',
+                    timestamp: '2024-05-22T09:12:00Z',
+                    duration: '--',
+                    summary: 'QA escalation',
+                    contextType: 'direct',
+                    contextId: 'c2',
+                    participants: [
+                        { userId: 'u3', micOn: true, videoOn: false },
+                        { userId: 'u1', micOn: true, videoOn: false }
+                    ]
+                },
+                {
+                    id: 'call3',
+                    type: 'video',
+                    direction: 'outgoing',
+                    status: 'completed',
+                    timestamp: '2024-05-20T18:45:00Z',
+                    duration: '28m 02s',
+                    summary: 'Launch rehearsal',
+                    contextType: 'group',
+                    contextId: 'g1',
+                    participants: [
+                        { userId: 'u1', micOn: true, videoOn: true },
+                        { userId: 'u2', micOn: true, videoOn: false },
+                        { userId: 'u3', micOn: true, videoOn: true },
+                        { userId: 'u4', micOn: false, videoOn: false }
+                    ]
+                }
+            ],
+            emoji: [
+                // Faces & reactions
+                '😀','😁','😂','🤣','😃','😄','😊','😍','🤩','😘','😉','😇','🥳','🤗','🤔','🤨','😐','😶','🙄','😏',
+                '😴','🤤','😪','😷','🤒','🤕','🤠','😎','🤓','🥰','😬','😅','😓','😭','😡','😤','🤯','😱','😲','🥺',
+                '🤝','💪','👌','✌️','✋','👋','👉','👈','👆','👇','✍️','🙅','🙆','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','✨','💯',
+                // Affirmations & signals
+                '🙌','👏','👍','👎','🙏','✅','❌','⚠️','ℹ️','🔔','🔕','🔇','🔊','👀','🧠',
+                // Work & files
+                '📎','📌','📍','🔗','📝','📋','🗒️','📄','📃','📑','📁','📂','🗂️','🗃️','🗄️','🗑️',
+                // Communication
+                '✉️','📧','📞','☎️','📱','💬','🗨️','💭','🔖',
+                // Time & calendar
+                '⏰','⏱️','⏳','⌛','🗓️','📅',
+                // Navigation & arrows
+                '⬆️','⬇️','➡️','⬅️','↗️','↘️','↙️','↖️','↩️','↪️','🔼','🔽','🧭','🗺️',
+                // Media controls
+                '▶️','⏸️','⏹️','⏺️','⏭️','⏮️','⏩','⏪','🔀','🔁',
+                // Devices & tools
+                '💻','🖥️','🖱️','⌨️','🖨️','🧰','🛠️','🔧','🔨','⚙️','🧲','🔌','🔋',
+                // Dev & QA
+                '🐛','🧪','🧩','🚀','🔒','🔓','🛡️','🧱','🧮',
+                // Data & business
+                '📈','📉','📊','💡','🧾','💳','💰','🏦','🏷️','🎁','🛒','🚚',
+                // Sharing & storage
+                '📤','📥','💾','🗜️','📦','🗃️',
+                // Social/status
+                '🔥','🌟','⚡','🎯','🏆','🥇','🎉','🎊',
+                // Places & travel
+                '🏠','🏢','🏗️','🚧','🚦','🛣️','🛫','🛬','🚆','🚗',
+                // Weather/environment
+                '☀️','🌤️','🌧️','⛈️','🌩️','🌙','❄️','💧','🌈','♻️',
+                // Content & camera
+                '📷','🎥','🎙️','🖼️','🗒️','✏️',
+                // Learning
+                '📚','📖','🧑','🏫',
+                // Misc
+                '🔍','🧷','🧹','🧼','🧴','🧯','🆔','🇮🇳'
+            ]
+    
+        });
+    }
+    init_response();
     const getCurrentUser = () => staticData.currentUser;
     const getContacts = () => staticData.contacts;
     const getDirectChats = () => staticData.directChats;
@@ -596,7 +634,16 @@
         }
 
         if (elements.newChatBtn) {
-            elements.newChatBtn.addEventListener('click', () => showAlert('Start a conversation by selecting a teammate from the list. This preview uses static data.'));
+            elements.newChatBtn.addEventListener('click', () => {
+                const sampleUsers = [
+                    { id:'u1', name:'Elena Howard',  email:'elena@acme.com',  online:true },
+                    { id:'u2', name:'Noah Patterson',email:'noah@acme.com',   online:true },
+                    { id:'u3', name:'Sofia Martinez', email:'sofia@acme.com', online:false },
+                    { id:'u4', name:'Aarav Singh',    email:'aarav@acme.com', online:true },
+                    { id:'u5', name:'Mia Kapoor',     email:'mia@acme.com',   online:false },
+                ];
+                UserPicker.open(sampleUsers, u => console.log('Start chat with:', u));
+            });
         }
 
         if (elements.newGroupBtn) {
@@ -1012,12 +1059,17 @@
                 elements.chatRecipientName.textContent = contact ? contact.name : 'Teammate';
             }
             if (elements.chatRecipientMeta) {
-            const pieces = [
-                contact?.role,
-                formatPresenceLabel(contact?.presence),
-                conversation.topic
-            ].filter(Boolean);
-            elements.chatRecipientMeta.textContent = pieces.join(' - ');
+                let userStatus = '';
+                if(formatPresenceLabel(contact?.presence) == 'Online now') {
+                    userStatus = '<span  class="status-indicator online"></span> <span style="margin-left:3px;">Online now</span>';
+                } else if(formatPresenceLabel(contact?.presence) == "Typing") {
+                    userStatus = formatPresenceLabel(contact?.presence);
+                } else if(formatPresenceLabel(contact?.presence) == "Away") {
+                    userStatus = '<span class="status-indicator away"></span> <span style="margin-left:3px;">Away</span>';
+                } else {
+                    userStatus = '<span class="status-indicator "></span> <span style="margin-left:3px;">Offline</span>';
+                }
+                elements.chatRecipientMeta.innerHTML = userStatus;
             }
             if (elements.chatRecipientAvatar) {
                 elements.chatRecipientAvatar.src = (contact && contact.avatar) || buildInitialsAvatar(contact ? contact.name : 'Teammate');
@@ -2154,4 +2206,103 @@
     function buildGroupAvatar(name = '') {
         return buildInitialsAvatar(name, '#1f2937');
     }
+
+    const root = document.getElementById('userPickerRoot');
+    const list = document.getElementById('userPickerList');
+    const search = document.getElementById('userPickerSearch');
+    const count = document.getElementById('userPickerCount');
+
+    let users = [];
+    let onSelect = () => {};
+    let lastActive = null;
+
+    const qsAll = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+    const initials = n => n.split(/\s+/).slice(0,2).map(p=>p[0]?.toUpperCase()).join('');
+    const partition = (arr, fn) => arr.reduce((a,x)=> (fn(x)?a[0]:a[1]).push(x), [[],[]]) || a;
+
+    function filter(q){
+        const s = q.trim().toLowerCase();
+        if (!s) return users;
+        return users.filter(u =>
+        u.name.toLowerCase().includes(s) || (u.email||'').toLowerCase().includes(s)
+        );
+    }
+
+    function setActive(el){
+        qsAll('.item[aria-selected="true"]', list).forEach(n=>n.setAttribute('aria-selected','false'));
+        if (el){ el.setAttribute('aria-selected','true'); el.scrollIntoView({block:'nearest'}); lastActive = el; }
+    }
+
+    function render(data){
+        list.innerHTML = '';
+        const online = data.filter(u=>u.online);
+        const offline = data.filter(u=>!u.online);
+        const addSection = (title, items) => {
+        if (!items.length) return;
+        const s = document.createElement('div');
+        s.className = 'section'; s.textContent = title; list.appendChild(s);
+        items.forEach(u => {
+            const b = document.createElement('button');
+            b.className = 'item'; b.type = 'button'; b.setAttribute('role','option'); b.dataset.id = u.id;
+            b.innerHTML = `
+            <div class="avatar">${initials(u.name)}</div>
+            <div style="display:flex;flex-direction:column">
+                <span class="name">${u.name}</span>
+                <span class="sub">${u.email||''}</span>
+            </div>
+            <div style="flex:1"></div>
+            <span class="sub" style="display:flex;align-items:center;gap:8px">
+                <span class="dot ${u.online?'online':'offline'}"></span>${u.online?'Online':'Offline'}
+            </span>`;
+            b.addEventListener('click', () => choose(u));
+            b.addEventListener('mousemove', () => setActive(b));
+            list.appendChild(b);
+        });
+        };
+        addSection('Online', online);
+        addSection('Others', offline);
+        count.textContent = `${data.length} user${data.length!==1?'s':''}`;
+        setTimeout(()=> setActive(list.querySelector('.item')), 0);
+    }
+
+    function handleKeys(e){
+        if (e.key === 'Escape'){ e.preventDefault(); UserPicker.close(); return; }
+        const items = qsAll('.item', list);
+        if (!items.length) return;
+        const idx = items.findIndex(el => el.getAttribute('aria-selected') === 'true');
+        if (e.key === 'ArrowDown'){ e.preventDefault(); setActive(items[Math.min(idx+1, items.length-1)]); }
+        if (e.key === 'ArrowUp'){ e.preventDefault(); setActive(items[Math.max(idx-1, 0)]); }
+        if (e.key === 'Enter' && idx > -1){ e.preventDefault(); const id = items[idx].dataset.id; const u = users.find(x=>x.id==id); if (u) choose(u); }
+    }
+
+    function choose(user){
+        UserPicker.close();
+        onSelect?.(user);
+    }
+
+    function open(data, selectCallback){
+        users = Array.isArray(data) ? data : [];
+        onSelect = typeof selectCallback === 'function' ? selectCallback : () => {};
+        render(users);
+        root.classList.add('open'); root.setAttribute('aria-hidden','false');
+        document.addEventListener('keydown', handleKeys);
+        document.addEventListener('click', outsideClose, { capture:true });
+        search.value = ''; search.focus();
+    }
+
+    function close(){
+        root.classList.remove('open'); root.setAttribute('aria-hidden','true');
+        document.removeEventListener('keydown', handleKeys);
+        document.removeEventListener('click', outsideClose, { capture:true });
+    }
+
+    function outsideClose(e){
+        const modal = root.querySelector('.modal');
+        if (!modal.contains(e.target)) close();
+    }
+
+    qsAll('[data-close]', root).forEach(el => el.addEventListener('click', close));
+    search.addEventListener('input', e => render(filter(e.target.value)));
+
+    window.UserPicker = { open, close };
 })();

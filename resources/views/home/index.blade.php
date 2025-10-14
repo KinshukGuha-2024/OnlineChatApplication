@@ -48,7 +48,7 @@
                 <img src="https://ssl.gstatic.com/images/branding/product/1x/meet_2020q4_64dp.png" alt="Conversation avatar" class="chat-recipient__avatar" id="chatRecipientAvatar">
                 <div>
                     <h3 class="chat-recipient__name" id="chatRecipientName"></h3>
-                    <p class="chat-recipient__meta" id="chatRecipientMeta"></p>
+                    <p class="chat-recipient__meta" style="text-align:left;" id="chatRecipientMeta"></p>
                 </div>
             </div>
         <div class="chat-header__actions">
@@ -153,3 +153,22 @@
 </div>
 <script src="{{ asset('js/chat.js') }}" defer></script>
 @endsection
+
+<div id="userPickerRoot" class="modal-root" aria-hidden="true">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="userPickerTitle">
+    <div class="header">
+      <h2 id="userPickerTitle" class="title">Start a chat</h2>
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke-width="2"/></svg>
+        <input id="userPickerSearch" type="search" placeholder="Search name or email" autocomplete="off" />
+      </div>
+      <button class="close" type="button" data-close>Close</button>
+    </div>
+    <div id="userPickerList" class="body" role="listbox" aria-label="Users"></div>
+    <div class="footer">
+      <span id="userPickerCount">0 users</span>
+      <span>Enter to select • Esc to close</span>
+    </div>
+  </div>
+</div>
