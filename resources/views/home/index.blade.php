@@ -67,6 +67,9 @@
             <div class="chat-day-divider" id="chatEmptyState">
                 <p>Select a conversation to start chatting</p>
             </div>
+            <div class="chat-day-divider" id="NewChatState">
+                <p>Say Hi!!</p>
+            </div>
         </div>
         <div class="attachment-preview" id="attachmentPreview" hidden></div>
         <div class="chat-input-bar">

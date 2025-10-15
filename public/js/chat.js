@@ -453,6 +453,7 @@
         chatRecipientAvatar: document.getElementById('chatRecipientAvatar'),
         chatBody: document.getElementById('chatBody'),
         chatEmptyState: document.getElementById('chatEmptyState'),
+        NewChatState: document.getElementById('NewChatState'),
         messageInput: document.getElementById('messageInput'),
         sendButton: document.getElementById('btnSendMessage'),
         emojiButton: document.getElementById('btnEmojiPicker'),
@@ -489,7 +490,10 @@
 
     const directory = new Map();
 
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function() {
+        start();
+        init();
+    });
 
     function init() {
         if (!elements.app) {
@@ -636,11 +640,11 @@
         if (elements.newChatBtn) {
             elements.newChatBtn.addEventListener('click', () => {
                 const sampleUsers = [
-                    { id:'u1', name:'Elena Howard',  email:'elena@acme.com',  online:true },
-                    { id:'u2', name:'Noah Patterson',email:'noah@acme.com',   online:true },
-                    { id:'u3', name:'Sofia Martinez', email:'sofia@acme.com', online:false },
-                    { id:'u4', name:'Aarav Singh',    email:'aarav@acme.com', online:true },
-                    { id:'u5', name:'Mia Kapoor',     email:'mia@acme.com',   online:false },
+                    { id:'u1', image:'https://unsplash.com/s/photos/user', name:'Elena Howard',  email:'elena@acme.com', online:true,  presence:'online' },
+                    { id:'u2', image:'', name:'Noah Patterson',email:'noah@acme.com', online:false,  presence:'offline' },
+                    { id:'u3', image:'https://unsplash.com/photos/woman-smiling-wearing-denim-jacket-TSZo17r3m0s', name:'Sofia Martinez', email:'sofia@acme.com', presence:'online' },
+                    { id:'u4', image:'https://unsplash.com/photos/a-man-wearing-a-necklace-with-a-cross-on-it-nSBl2cfwnmE', name:'Aarav Singh', email:'aarav@acme.com', presence:'away' },
+                    { id:'u5', image:'https://unsplash.com/photos/a-woman-in-a-pink-dress-posing-for-a-picture-mynsNaNwVDc', name:'Mia Kapoor', email:'mia@acme.com', presence:'offline' },
                 ];
                 UserPicker.open(sampleUsers, u => console.log('Start chat with:', u));
             });
@@ -1090,21 +1094,23 @@
         }
     }
 
-    function renderConversation(conversation, type) {
+    function renderConversation(conversation, type, newChat = null) {
         if (!elements.chatBody) {
             return;
         }
 
         const body = elements.chatBody;
         const emptyState = elements.chatEmptyState;
+        const newChatState = elements.NewChatState;
+        
         body.innerHTML = '';
         state.mediaGroups.clear();
         state.activeMediaGroup = null;
 
         if (!conversation) {
-            if (emptyState) {
-                emptyState.hidden = false;
-                body.appendChild(emptyState);
+            if (newChatState && newChat) {
+                newChatState.hidden = false;
+                body.appendChild(newChatState);
             }
             if (elements.videoCallBtn) {
                 elements.videoCallBtn.disabled = true;
@@ -1668,29 +1674,26 @@
         return `${value.toFixed(precision)} ${units[unitIndex]}`;
     }
 
-    function startCall(type, callLog) {
+    async function startCall(type, callLog) {
         if (callLog) {
             const derivedType = callLog.contextType === 'group' ? 'group' : 'direct';
-            const conversation = getConversationById(callLog.contextId, derivedType);
-            if (conversation) {
-                loadConversation(conversation.id, derivedType);
-            }
+            const c = getConversationById(callLog.contextId, derivedType);
+            if (c) loadConversation(c.id, derivedType);
         }
 
         const conversation = getActiveConversation();
         if (!conversation) {
             showAlert('Select a conversation before starting a call.');
-            return;
         }
 
         const conversationType = state.activeConversationType;
-        const participantIds = conversationType === 'direct'
-            ? conversation.participants
-            : conversation.members;
+        const participantIds = conversationType === 'direct' ? conversation.participants : conversation.members;
 
         const participants = participantIds.map(userId => buildParticipantState(userId, type, callLog));
         const currentUser = getCurrentUser();
-        const localParticipant = participants.find(participant => participant.userId === currentUser.id);
+
+        const wantVideo = type === 'video';
+        const wantAudio = true;
 
         state.callSession = {
             type,
@@ -1698,15 +1701,68 @@
             conversationType,
             participants,
             local: {
-                userId: currentUser.id,
-                micOn: localParticipant ? localParticipant.micOn : currentUser.devices?.microphone !== false,
-                cameraOn: type === 'video' && localParticipant ? localParticipant.videoOn : type === 'video' && currentUser.devices?.camera !== false
+            userId: currentUser.id,
+            micOn: wantAudio,                 // default ON when starting a call
+            cameraOn: wantVideo               // default ON for video calls
             }
         };
 
         synchronizeLocalParticipant();
         renderCallModal(conversation, type);
-    }
+
+        try {
+            const stream = await openLocalMedia({ audio: wantAudio, video: wantVideo });
+            attachLocalStream(stream); // ensure your modal has a <video id="localVideo">
+            // reflect real device state
+            state.callSession.local.micOn = stream.getAudioTracks().some(t => t.enabled !== false);
+            state.callSession.local.cameraOn = stream.getVideoTracks().some(t => t.enabled !== false);
+        } catch (err) {
+            handleMediaError(err, wantAudio, wantVideo);
+        }
+        }
+
+        async function openLocalMedia({ audio, video }) {
+        // reuse existing stream if matches requested kinds
+        if (state.localStream) {
+            const hasAudio = state.localStream.getAudioTracks().length > 0;
+            const hasVideo = state.localStream.getVideoTracks().length > 0;
+            if (!!audio === hasAudio && !!video === hasVideo) return state.localStream;
+            stopStream(state.localStream);
+        }
+
+        const constraints = {
+            audio: !!audio,
+            video: !!video && { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        state.localStream = stream;
+        return stream;
+        }
+
+        function attachLocalStream(stream) {
+        const el = document.getElementById('localVideo');
+        if (!el) return;
+        el.srcObject = stream;
+        // for iOS Safari
+        el.autoplay = true;
+        el.muted = true;
+        el.playsInline = true;
+        el.play().catch(() => {});
+        }
+
+        function stopStream(stream) {
+        stream.getTracks().forEach(t => t.stop());
+        }
+
+        function handleMediaError(err, wantAudio, wantVideo) {
+        let msg = 'Could not access ';
+        if (wantAudio && wantVideo) msg += 'microphone/camera.';
+        else if (wantVideo) msg += 'camera.';
+        else msg += 'microphone.';
+        // Common causes: blocked permissions, non-HTTPS origin, OS privacy settings, another app using camera
+        showAlert(msg + ' Please allow permissions, use HTTPS, and ensure no other app is using them.\n' + (err && err.message ? err.message : ''));
+        }
 
     function renderCallModal(conversation, type) {
         if (!elements.callModal || !state.callSession) {
@@ -2244,8 +2300,12 @@
         items.forEach(u => {
             const b = document.createElement('button');
             b.className = 'item'; b.type = 'button'; b.setAttribute('role','option'); b.dataset.id = u.id;
-            b.innerHTML = `
-            <div class="avatar">${initials(u.name)}</div>
+            if(u.image != '') {
+                b.innerHTML = `<img class="avatar" src="${u.image}">`;
+            } else {
+                b.innerHTML = `<div class="avatar">${initials(u.name)}</div>`;
+            }
+            b.innerHTML += `
             <div style="display:flex;flex-direction:column">
                 <span class="name">${u.name}</span>
                 <span class="sub">${u.email||''}</span>
@@ -2277,6 +2337,32 @@
 
     function choose(user){
         UserPicker.close();
+        staticData.currentUser = {};
+        if (elements.chatRecipientName) {
+            elements.chatRecipientName.textContent = user.name;
+        }
+        if (elements.chatRecipientMeta) {
+            let userStatus = '';
+            if(user.presence == 'online') {
+                userStatus = '<span  class="status-indicator online"></span> <span style="margin-left:3px;">Online now</span>';
+            } else if(user.presence == "away") {
+                userStatus = '<span class="status-indicator away"></span> <span style="margin-left:3px;">Away</span>';
+            } else {
+                userStatus = '<span class="status-indicator "></span> <span style="margin-left:3px;">Offline</span>';
+            }
+            elements.chatRecipientMeta.innerHTML = userStatus;
+        }
+        if (elements.chatRecipientAvatar) {
+            elements.chatRecipientAvatar.src = '';
+            elements.chatRecipientAvatar.alt = '';
+        }
+        if (elements.videoCallBtn) {
+            elements.videoCallBtn.disabled = true;
+        }
+        if (elements.voiceCallBtn) {
+            elements.voiceCallBtn.disabled = true;
+        }
+        renderConversation(null, null, 1);
         onSelect?.(user);
     }
 
@@ -2305,4 +2391,29 @@
     search.addEventListener('input', e => render(filter(e.target.value)));
 
     window.UserPicker = { open, close };
+
+    async function start() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('getUserMedia not supported'); return;
+      }
+      try {
+        console.log('Requesting permissions…');
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        v.srcObject = stream;
+        console.log('Access granted. Streaming.');
+      } catch (err) {
+        if (err.name === 'NotAllowedError') {
+          tap.style.display = 'inline-block';
+          console.log('Permission blocked or requires a user gesture.');
+        } else if (err.name === 'NotFoundError') {
+          console.log('No camera/mic found.');
+        } else if (err.name === 'NotReadableError') {
+          console.log('Device is in use by another app.');
+        } else if (err.name === 'OverconstrainedError') {
+          console.log('Constraints not satisfied.');
+        } else {
+          console.log(err.name + ': ' + err.message);
+        }
+      }
+    }
 })();
