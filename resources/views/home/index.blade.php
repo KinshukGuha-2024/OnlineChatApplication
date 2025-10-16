@@ -154,6 +154,29 @@
         </div>
     </div>
 </div>
+@php
+    if (!isset($socketScript)) {
+        $resolvedSocketUrl = rtrim($socketUrl ?? '', '/');
+        $socketScript = $resolvedSocketUrl ? $resolvedSocketUrl . '/socket.io/socket.io.js' : null;
+    }
+@endphp
+<script>
+    window.__CHAT_CONFIG__ = {
+        user: {
+            id: {{ $chatUser?->id ?? 'null' }},
+            name: @json(($chatUser?->first_name ?? '') . ' ' . ($chatUser?->last_name ?? '')),
+            email: @json($chatUser?->email ?? ''),
+        },
+        socket: {
+            url: @json($socketUrl ?? ''),
+            token: @json(optional($chatUser)->access_token),
+            script: @json($socketScript)
+        }
+    };
+</script>
+@if($socketScript)
+<script src="{{ $socketScript }}" data-socket-client="true" defer></script>
+@endif
 <script src="{{ asset('js/chat.js') }}" defer></script>
 @endsection
 

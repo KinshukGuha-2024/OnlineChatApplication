@@ -489,6 +489,21 @@
     };
 
     const directory = new Map();
+    const realtime = {
+        socket: null,
+        bootstrap: null,
+        currentPresence: 'offline',
+        typing: {
+            active: false,
+            timeoutId: null,
+            chatId: null
+        },
+        listenersBound: false,
+        socketClientPromise: null,
+        loadingRealtime: false
+    };
+    const TYPING_IDLE_DELAY = 1500;
+    const SOCKET_CLIENT_FALLBACK = 'https://cdn.socket.io/4.8.1/socket.io.min.js';
 
     document.addEventListener('DOMContentLoaded', function() {
         start();
@@ -509,6 +524,7 @@
         renderSidebarList();
         loadInitialConversation();
         autoResizeTextarea();
+        initializeRealtime();
     }
 
     function buildDirectory() {
@@ -518,6 +534,7 @@
         getContacts().forEach(contact => {
             directory.set(contact.id, contact);
         });
+        syncRealtimeRoster();
     }
 
     function deriveConversationMeta() {
@@ -543,6 +560,407 @@
         });
 
         getCallLogs().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    }
+
+    function ensureSocketClientLoaded() {
+        if (typeof window.io === 'function') {
+            return Promise.resolve();
+        }
+        if (realtime.socketClientPromise) {
+            return realtime.socketClientPromise;
+        }
+
+        const config = window.__CHAT_CONFIG__ || {};
+        const socketConfig = config.socket || {};
+        const primarySource = socketConfig.script || (socketConfig.url ? `${socketConfig.url.replace(/\/$/, '')}/socket.io/socket.io.js` : null);
+        const sources = [primarySource, SOCKET_CLIENT_FALLBACK].filter(Boolean);
+
+        realtime.socketClientPromise = new Promise((resolve, reject) => {
+            if (!sources.length) {
+                reject(new Error('No Socket.IO client source defined.'));
+                return;
+            }
+
+            const tryLoad = (index) => {
+                if (typeof window.io === 'function') {
+                    resolve();
+                    return;
+                }
+                if (index >= sources.length) {
+                    reject(new Error('Socket.IO client script failed to load.'));
+                    return;
+                }
+
+                const src = sources[index];
+                let script = Array.from(document.querySelectorAll('script[data-socket-client="true"]'))
+                    .find(node => node.src && node.src === src);
+
+                const attach = (node, nextIndex) => {
+                    node.addEventListener('load', () => {
+                        node.dataset.loaded = 'true';
+                        resolve();
+                    }, { once: true });
+                    node.addEventListener('error', () => {
+                        node.remove();
+                        tryLoad(nextIndex);
+                    }, { once: true });
+                };
+
+                if (script) {
+                    if (script.dataset.loaded === 'true' || script.readyState === 'complete') {
+                        resolve();
+                        return;
+                    }
+                    script.remove();
+                }
+
+                script = document.createElement('script');
+                script.src = src;
+                script.async = true;
+                script.dataset.socketClient = 'true';
+                attach(script, index + 1);
+                document.head.appendChild(script);
+            };
+
+            tryLoad(0);
+        }).then(() => {
+            if (typeof window.io !== 'function') {
+                throw new Error('Socket.IO client unavailable after loading attempts.');
+            }
+            return window.io;
+        }).catch(error => {
+            realtime.socketClientPromise = null;
+            throw error;
+        });
+
+        return realtime.socketClientPromise;
+    }
+
+    function initializeRealtime() {
+        if (realtime.socket || realtime.loadingRealtime) {
+            return;
+        }
+        const config = window.__CHAT_CONFIG__;
+        if (!config || !config.socket || !config.socket.url) {
+            console.warn('[chat] Socket configuration missing. Realtime layer disabled.');
+            return;
+        }
+        realtime.loadingRealtime = true;
+        ensureSocketClientLoaded()
+            .then(() => {
+                realtime.loadingRealtime = false;
+                connectSocket();
+            })
+            .catch(error => {
+                realtime.loadingRealtime = false;
+                console.warn('[chat] Unable to load Socket.IO client.', error);
+            });
+    }
+
+    function connectSocket() {
+        if (realtime.socket) {
+            return;
+        }
+        const config = window.__CHAT_CONFIG__;
+        if (!config || !config.socket || !config.socket.url) {
+            return;
+        }
+        if (typeof window.io !== 'function') {
+            console.warn('[chat] Socket.IO client unavailable after load attempt.');
+            return;
+        }
+        realtime.bootstrap = buildRealtimeBootstrap();
+        const auth = {
+            bootstrap: realtime.bootstrap,
+            user_id: realtime.bootstrap.user_id
+        };
+        if (config.socket.token) {
+            auth.token = config.socket.token;
+        }
+        realtime.socket = window.io(config.socket.url, {
+            transports: ['websocket'],
+            auth
+        });
+        realtime.socket.on('connect', handleSocketConnect);
+        realtime.socket.on('disconnect', handleSocketDisconnect);
+        realtime.socket.on('connect_error', error => {
+            console.error('[chat] Socket connection error', error);
+        });
+        realtime.socket.on('presence_snapshot', payload => {
+            const users = Array.isArray(payload?.users) ? payload.users : payload;
+            applyPresenceSnapshot(users);
+        });
+        realtime.socket.on('presence_updated', payload => {
+            if (!payload || !payload.user_id) {
+                return;
+            }
+            if (applyPresenceUpdate(String(payload.user_id), payload.presence)) {
+                refreshPresenceUI();
+            }
+        });
+        realtime.socket.on('online_user_ids', payload => {
+            if (!payload || !Array.isArray(payload.user_ids)) {
+                return;
+            }
+            let changed = false;
+            payload.user_ids.forEach(id => {
+                changed = applyPresenceUpdate(String(id), 'online') || changed;
+            });
+            if (changed) {
+                refreshPresenceUI();
+            }
+        });
+        realtime.socket.on('user_connected', payload => {
+            if (!payload || !payload.user_id) {
+                return;
+            }
+            if (applyPresenceUpdate(String(payload.user_id), 'online')) {
+                refreshPresenceUI();
+            }
+        });
+        realtime.socket.on('user_disconnected', payload => {
+            if (!payload || !payload.user_id) {
+                return;
+            }
+            if (applyPresenceUpdate(String(payload.user_id), 'offline')) {
+                refreshPresenceUI();
+            }
+        });
+        realtime.socket.on('started_typing', payload => {
+            if (!payload || !payload.user_id) {
+                return;
+            }
+            if (applyPresenceUpdate(String(payload.user_id), 'typing')) {
+                refreshPresenceUI();
+            }
+        });
+        if (!realtime.listenersBound) {
+            window.addEventListener('beforeunload', () => {
+                if (realtime.socket) {
+                    realtime.socket.close();
+                }
+            });
+            document.addEventListener('visibilitychange', handleVisibilityPresenceChange);
+            realtime.listenersBound = true;
+        }
+    }
+
+    function handleSocketConnect() {
+        const desiredPresence = document.visibilityState === 'hidden' ? 'away' : 'online';
+        updateOwnPresence(desiredPresence, { render: true, emit: false });
+        syncRealtimeRoster();
+        if (realtime.socket && realtime.socket.connected) {
+            realtime.socket.emit('update_presence', { presence: desiredPresence });
+        }
+    }
+
+    function handleSocketDisconnect() {
+        stopTypingIndicator(false);
+        updateOwnPresence('offline', { render: true, emit: false });
+    }
+
+    function buildRealtimeBootstrap() {
+        const currentUser = getCurrentUser();
+        const friendIds = computeFriendIds();
+        return {
+            user_id: currentUser.id,
+            friend_ids: friendIds,
+            total_unread: getDirectChats().reduce((acc, chat) => acc + (chat.unreadCount || 0), 0),
+            notification_unread: Number(currentUser.notificationUnread || 0)
+        };
+    }
+
+    function computeFriendIds() {
+        const currentUser = getCurrentUser();
+        const ids = new Set();
+        const addId = value => {
+            if (value !== undefined && value !== null) {
+                ids.add(String(value));
+            }
+        };
+        getContacts().forEach(contact => addId(contact.id));
+        getDirectChats().forEach(chat => {
+            if (chat.participantId) {
+                addId(chat.participantId);
+            }
+            if (Array.isArray(chat.participants)) {
+                chat.participants.forEach(id => addId(id));
+            }
+        });
+        getGroupChats().forEach(group => {
+            if (Array.isArray(group.members)) {
+                group.members.forEach(id => addId(id));
+            }
+        });
+        ids.delete(String(currentUser.id));
+        return Array.from(ids);
+    }
+
+    function syncRealtimeRoster() {
+        if (!realtime.socket || !realtime.socket.connected) {
+            return;
+        }
+        const friendIds = computeFriendIds();
+        if (realtime.bootstrap) {
+            realtime.bootstrap.friend_ids = friendIds;
+        }
+        realtime.socket.emit('update_friends', { friend_ids: friendIds });
+    }
+
+    function applyPresenceSnapshot(users) {
+        if (!Array.isArray(users)) {
+            return;
+        }
+        let changed = false;
+        users.forEach(user => {
+            if (!user || !user.user_id) {
+                return;
+            }
+            changed = applyPresenceUpdate(String(user.user_id), user.presence) || changed;
+        });
+        if (changed) {
+            refreshPresenceUI();
+        }
+    }
+
+    function applyPresenceUpdate(userId, presence) {
+        if (!userId) {
+            return false;
+        }
+        const normalized = normalizePresenceValue(presence);
+        const currentUser = getCurrentUser();
+        if (String(userId) === String(currentUser.id)) {
+            return updateOwnPresence(normalized, { emit: false, render: false });
+        }
+        const contact = getContactById(userId);
+        if (!contact) {
+            return false;
+        }
+        if (contact.presence === normalized) {
+            return false;
+        }
+        contact.presence = normalized;
+        directory.set(contact.id, contact);
+        return true;
+    }
+
+    function updateOwnPresence(presence, { emit = false, render = false } = {}) {
+        const normalized = normalizePresenceValue(presence);
+        const currentUser = getCurrentUser();
+        if (!currentUser) {
+            return false;
+        }
+        const previous = currentUser.presence;
+        currentUser.presence = normalized;
+        directory.set(currentUser.id, currentUser);
+        realtime.currentPresence = normalized;
+        if (emit && realtime.socket && realtime.socket.connected && (normalized === 'online' || normalized === 'away')) {
+            realtime.socket.emit('update_presence', { presence: normalized });
+        }
+        if (render || previous !== normalized) {
+            refreshPresenceUI();
+        }
+        return previous !== normalized;
+    }
+
+    function normalizePresenceValue(presence) {
+        if (typeof presence !== 'string') {
+            return 'offline';
+        }
+        const value = presence.toLowerCase();
+        const allowed = new Set(['online', 'away', 'offline', 'busy', 'typing']);
+        return allowed.has(value) ? value : 'offline';
+    }
+
+    function refreshPresenceUI() {
+        renderCurrentUser();
+        renderSidebarList();
+        refreshActiveConversationPresence();
+    }
+
+    function refreshActiveConversationPresence() {
+        const conversation = getActiveConversation();
+        if (!conversation) {
+            return;
+        }
+        renderConversationHeader(conversation, state.activeConversationType);
+    }
+
+    function handleVisibilityPresenceChange() {
+        if (!realtime.socket || !realtime.socket.connected) {
+            return;
+        }
+        const desired = document.visibilityState === 'hidden' ? 'away' : 'online';
+        updateOwnPresence(desired, { emit: true, render: true });
+    }
+
+    function notifyTypingIndicator() {
+        if (!realtime.socket || !realtime.socket.connected) {
+            return;
+        }
+        const conversation = getActiveConversation();
+        if (!conversation || state.activeConversationType !== 'direct') {
+            return;
+        }
+        const recipientId = conversation.participantId;
+        if (!recipientId) {
+            return;
+        }
+        if (!realtime.typing.active || realtime.typing.chatId !== conversation.id) {
+            realtime.socket.emit('started_typing', {
+                to_user_id: recipientId,
+                chat_id: conversation.id
+            });
+            realtime.typing.active = true;
+            realtime.typing.chatId = conversation.id;
+        }
+        if (realtime.typing.timeoutId) {
+            clearTimeout(realtime.typing.timeoutId);
+        }
+        realtime.typing.timeoutId = window.setTimeout(() => {
+            if (!realtime.socket || !realtime.socket.connected) {
+                realtime.typing.active = false;
+                realtime.typing.chatId = null;
+                realtime.typing.timeoutId = null;
+                return;
+            }
+            realtime.socket.emit('stopped_typing', {
+                to_user_id: recipientId,
+                chat_id: conversation.id
+            });
+            realtime.typing.active = false;
+            realtime.typing.chatId = null;
+            realtime.typing.timeoutId = null;
+        }, TYPING_IDLE_DELAY);
+    }
+
+    function stopTypingIndicator(force = false) {
+        if (realtime.typing.timeoutId) {
+            clearTimeout(realtime.typing.timeoutId);
+            realtime.typing.timeoutId = null;
+        }
+        if ((force || realtime.typing.active) && realtime.socket && realtime.socket.connected) {
+            const conversation = getActiveConversation();
+            if (conversation && state.activeConversationType === 'direct' && conversation.participantId) {
+                realtime.socket.emit('stopped_typing', {
+                    to_user_id: conversation.participantId,
+                    chat_id: conversation.id
+                });
+            }
+        }
+        realtime.typing.active = false;
+        realtime.typing.chatId = null;
+    }
+
+    function handleTypingActivity() {
+        if (!elements.messageInput) {
+            return;
+        }
+        if (!elements.messageInput.value.trim()) {
+            stopTypingIndicator(true);
+            return;
+        }
+        notifyTypingIndicator();
     }
 
     function getLastTimestamp(messages) {
@@ -572,6 +990,8 @@
                     handleSendMessage();
                 }
             });
+            elements.messageInput.addEventListener('input', handleTypingActivity);
+            elements.messageInput.addEventListener('blur', () => stopTypingIndicator(true));
         }
 
         if (elements.emojiButton) {
@@ -1006,6 +1426,7 @@
     }
 
     function loadConversation(id, type) {
+        stopTypingIndicator(true);
         const conversation = getConversationById(id, type);
         if (!conversation) {
             return;
@@ -1552,6 +1973,7 @@
         conversation.messages.push(message);
         conversation.lastActivity = message.timestamp;
 
+        stopTypingIndicator(true);
         resetMessageComposer();
         renderConversation(conversation, state.activeConversationType);
         renderSidebarList();
@@ -2187,6 +2609,8 @@
                 return 'Away';
             case 'busy':
                 return 'Busy';
+            case 'typing':
+                return 'Typing';
             default:
                 return 'Offline';
         }
@@ -2200,6 +2624,8 @@
                 return 'away';
             case 'busy':
                 return 'busy';
+            case 'typing':
+                return 'typing';
             default:
                 return '';
         }
@@ -2394,7 +2820,7 @@
 
     async function start() {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert('getUserMedia not supported'); return;
+        // alert('getUserMedia not supported'); return;
       }
       try {
         console.log('Requesting permissions…');

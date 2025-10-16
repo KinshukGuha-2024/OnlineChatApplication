@@ -30,5 +30,4 @@ Route::middleware([AuthMiddleware::class])->controller(HomeController::class)->p
 Route::controller(TestController::class)->prefix('test')->group(function() {
     Route::get('/zip2pdf', [TestController::class, 'index'])->name('zip2pdf.index');
     Route::post('/zip2pdf/process', [TestController::class, 'process'])->name('zip2pdf.process');
-
 });
